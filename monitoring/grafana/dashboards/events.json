@@ -1,0 +1,11 @@
+{
+  "uid":"signalatlas-events",
+  "title":"SignalAtlas — Observed Sparkplug Events",
+  "schemaVersion":40,
+  "version":1,
+  "time":{"from":"now-15m","to":"now"},
+  "panels":[
+    {"id":1,"type":"timeseries","title":"Validated events / second","gridPos":{"x":0,"y":0,"w":12,"h":8},"targets":[{"expr":"sum by (node,type) (rate(signalatlas_sparkplug_events_total[1m]))","refId":"A"}]},
+    {"id":2,"type":"timeseries","title":"Rejected observations / second","gridPos":{"x":12,"y":0,"w":12,"h":8},"targets":[{"expr":"sum by (reason) (rate(signalatlas_rejected_events_total[1m]))","refId":"A"}]}
+  ]
+}

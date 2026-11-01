@@ -1,0 +1,585 @@
+You are acting as a senior SCADA/OT engineer, SRE, Python backend engineer, and industrial observability architect.
+
+I am building a portfolio project named:
+
+# SignalAtlas
+### Read-Only SCADA Topology & Observability Lab
+
+The purpose is to learn and demonstrate practical skills in:
+
+Ignition SCADA  
+Ignition Perspective  
+MQTT  
+Sparkplug B  
+industrial edge nodes  
+Python  
+Linux  
+PostgreSQL  
+networking  
+Prometheus  
+Grafana  
+AWS-style observability  
+read-only production monitoring
+
+This project must be technically real and demonstrable.
+
+Do not fabricate integrations, benchmarks, screenshots, metrics, test results, or completed functionality.
+
+Do not use or imitate proprietary company data, internal hostnames, credentials, diagrams, schemas, or source code.
+
+Use only synthetic industrial data.
+
+The architecture should represent a generic industrial monitoring environment:
+
+Edge Node A
+Edge Node B
+Edge Node C
+        ↓
+     MQTT Broker
+        ↓
+    Sparkplug B
+        ↓
+ Ignition Gateway
+        ↓
+Perspective SCADA View
+
+Additional observability:
+
+PostgreSQL historian
+Ignition Gateway health
+MQTT broker health
+Edge-node health
+Network/link health
+        ↓
+Python collectors
+        ↓
+Prometheus
+        ↓
+Grafana
+
+The entire monitoring system must be observational. It must never send control commands to simulated machinery.
+
+## Phase 0 — Repository Foundation
+
+Create a production-quality repository.
+
+Suggested structure:
+
+signalatlas/
+  apps/
+    topology-api/
+    edge-simulator/
+  ignition/
+    README.md
+    perspective/
+    screenshots/
+  infrastructure/
+    docker/
+    terraform/
+  monitoring/
+    prometheus/
+    grafana/
+  postgres/
+    init/
+    queries/
+  tests/
+    unit/
+    integration/
+  docs/
+    architecture.md
+    sparkplug.md
+    troubleshooting.md
+    security.md
+    demo.md
+  docker-compose.yml
+  Makefile
+  README.md
+
+Add:
+
+Python formatting/linting
+pytest
+type checking
+pre-commit configuration
+GitHub Actions CI
+environment-variable validation
+sample .env.example
+Makefile commands
+
+Required commands:
+
+make up
+make down
+make test
+make lint
+make demo
+make fault-demo
+
+Do not proceed until the repository starts cleanly and CI is green.
+
+## Phase 1 — Industrial Edge Simulation
+
+Build three independent Python edge-node simulators.
+
+Use Eclipse Tahu or another standards-compliant implementation of Sparkplug B.
+
+Each node represents one synthetic industrial site.
+
+Each node should expose realistic telemetry such as:
+
+CPU utilization
+memory utilization
+uptime
+device temperature
+scan-cycle duration
+tag quality
+last publish timestamp
+message count
+site identifier
+
+Implement Sparkplug session semantics rather than treating MQTT as simple JSON pub/sub.
+
+Demonstrate at minimum:
+
+node startup/birth
+periodic metric publishing
+graceful disconnect
+unexpected disconnect
+reconnection
+last-known state
+last-seen timestamp
+
+The topology system must be able to distinguish:
+
+HEALTHY
+DEGRADED
+STALE
+OFFLINE
+UNKNOWN
+
+Write unit tests for every state transition.
+
+Add structured logs explaining why a node changed state.
+
+## Phase 2 — MQTT Infrastructure
+
+Deploy an MQTT broker locally.
+
+Prefer either:
+
+Mosquitto for a simple standalone architecture
+
+or
+
+Ignition MQTT Distributor if it provides a better learning path.
+
+Document the reasoning.
+
+Implement:
+
+authenticated clients
+unique client IDs
+last-will behavior
+connection monitoring
+subscription monitoring
+message-rate metrics
+birth/death event counters
+
+Create a diagnostic CLI:
+
+python -m tools.mqtt_status
+
+It should display:
+
+connected nodes
+last-seen timestamp
+publish rate
+birth events
+death events
+stale nodes
+
+Do not hide failures.
+
+If the broker is stopped, the topology should visibly show the break in connectivity.
+
+## Phase 3 — Topology Service
+
+Build a Python topology service.
+
+Use FastAPI.
+
+The service subscribes to MQTT/Sparkplug events and maintains the current connectivity graph.
+
+Represent:
+
+sites
+edge nodes
+MQTT broker
+Ignition gateway
+PostgreSQL
+logical links between components
+
+Provide REST endpoints:
+
+GET /health
+
+GET /api/topology
+
+GET /api/nodes
+
+GET /api/nodes/{id}
+
+GET /api/links
+
+GET /api/incidents
+
+The topology endpoint should return nodes and links with:
+
+status
+last_seen
+latency if measurable
+source
+reason for state
+updated_at
+
+Do not invent health.
+
+Every health state must be derived from an observed signal or timeout rule.
+
+Write tests covering:
+
+node disappears
+broker disappears
+node reconnects
+duplicate messages
+out-of-order timestamps
+stale telemetry
+invalid payload
+unknown node
+
+## Phase 4 — PostgreSQL Historian Monitoring
+
+Run PostgreSQL locally as the simulated historian.
+
+Create synthetic historian tables containing sensor observations.
+
+Create a dedicated monitoring database user.
+
+This user should have only the minimum SELECT permissions required.
+
+The monitoring service must not INSERT, UPDATE, DELETE, ALTER, CREATE, or DROP through the monitoring credentials.
+
+Collect real PostgreSQL health information where available from:
+
+pg_stat_activity
+pg_stat_database
+pg_stat_replication
+pg_stat_statements
+
+Expose:
+
+active connection count
+idle connection count
+database size
+transaction rate
+slow-query observations
+long-running queries
+replication lag if replication is configured
+storage growth over time
+
+Create at least one controlled slow-query scenario so monitoring can demonstrate detection.
+
+If practical, configure a primary and local read replica so replication-lag monitoring is real.
+
+Never fabricate a replication value if replication is not configured.
+
+Show N/A instead.
+
+## Phase 5 — Ignition
+
+Install and configure Ignition Maker Edition.
+
+Use Ignition 8.3 unless compatibility requires another supported release.
+
+Install the appropriate Cirrus Link MQTT modules.
+
+Connect Ignition to the MQTT/Sparkplug environment.
+
+Verify that Sparkplug node/device/tag structures appear correctly.
+
+Use Ignition System Tags and available diagnostic metrics to capture real gateway information such as:
+
+gateway uptime
+CPU usage
+memory usage
+memory utilization
+available disk
+database connection health
+active queries
+error rate
+Perspective session count
+
+Document every Ignition configuration step so another developer can reproduce it.
+
+Export or version any configuration artifacts that can safely be stored in Git.
+
+Never commit secrets or proprietary modules.
+
+## Phase 6 — Ignition Perspective Topology
+
+Create the main SignalAtlas user interface using Ignition Perspective.
+
+The first screen must be a live connectivity diagram.
+
+Show:
+
+Edge Site A
+Edge Site B
+Edge Site C
+MQTT Broker
+Ignition Gateway
+PostgreSQL Historian
+
+Represent each relationship with a visible link.
+
+Link states:
+
+green = healthy
+yellow = degraded/stale
+red = disconnected
+gray = unknown
+
+Each component should display:
+
+current status
+last seen
+uptime
+important metrics
+reason for degraded/offline state
+
+Clicking a node should open a detail panel.
+
+The UI must clearly answer:
+
+What is down?
+
+Where is the break?
+
+When was it last healthy?
+
+What evidence caused that status?
+
+Avoid decorative dashboards that do not help diagnose failures.
+
+## Phase 7 — Grafana / Prometheus
+
+Add Prometheus metrics to the Python services.
+
+Create Grafana dashboards for:
+
+SCADA overview
+edge-node health
+MQTT health
+Ignition gateway health
+PostgreSQL health
+
+Include:
+
+CPU
+memory
+uptime
+publish frequency
+last publish time
+message throughput
+birth/death count
+database connections
+database growth
+slow-query count
+replication lag when available
+Ignition gateway resource health
+
+The Perspective view is the operational topology.
+
+Grafana is the deep-dive metrics view.
+
+Do not duplicate the same UI twice.
+
+## Phase 8 — Failure Injection
+
+Create deterministic failure scenarios.
+
+At minimum demonstrate:
+
+edge node process stopped
+edge node network interruption
+MQTT broker stopped
+broker restarted
+PostgreSQL unavailable
+PostgreSQL replica delayed or stopped if configured
+stale publisher
+high CPU on an edge simulator
+slow database query
+
+Create:
+
+make fault-demo
+
+The command should guide a user through controlled failures one at a time.
+
+For each scenario capture:
+
+expected topology change
+expected alert/metric
+time to detection
+recovery behavior
+
+Automated tests should verify state transitions where possible.
+
+## Phase 9 — Optional AWS Integration
+
+Only implement this phase if valid AWS credentials and explicit authorization are available.
+
+Do not require AWS for the core demo.
+
+Create a read-only AWS adapter capable of consuming:
+
+CloudWatch EC2 metrics
+RDS metrics
+CloudWatch Database Insights data where accessible
+
+Use least-privilege IAM.
+
+Do not provision expensive infrastructure automatically.
+
+Any Terraform that provisions cloud resources must:
+
+show estimated resources clearly
+require explicit apply
+support complete terraform destroy
+
+The local version must remain fully functional without AWS.
+
+Document that AWS Database Insights is the modern replacement for the older Performance Insights workflow.
+
+## Phase 10 — Testing
+
+Build a serious test suite.
+
+Unit tests:
+
+Sparkplug lifecycle state machine
+health calculations
+timeout logic
+topology graph updates
+database metric transformations
+
+Integration tests:
+
+edge node → MQTT broker
+MQTT → collector
+collector → topology API
+PostgreSQL → metrics collector
+
+Failure tests:
+
+disconnect
+stale data
+reconnect
+duplicate birth
+unexpected death
+database unavailable
+
+CI must fail if tests fail.
+
+Do not report a test count until the suite has actually run successfully.
+
+## Phase 11 — Security
+
+Document the read-only model.
+
+The repository must demonstrate:
+
+SELECT-only PostgreSQL monitoring credentials
+no hardcoded passwords
+least-privilege configuration
+separate application and monitoring identities
+TLS where practical
+environment-based secrets
+.gitignore secret protection
+
+Create docs/security.md explaining what SignalAtlas can and cannot change.
+
+The project should make it impossible or clearly prohibited for the observability layer to control equipment.
+
+## Phase 12 — Documentation and Demo
+
+The README should begin with the problem:
+
+Industrial SCADA environments often have health information spread across gateways, brokers, databases, and edge devices. SignalAtlas creates one read-only view showing how those systems connect and where connectivity has failed.
+
+Include:
+
+architecture diagram
+setup instructions
+technology choices
+screenshots
+failure-demo instructions
+testing instructions
+security/read-only model
+what I learned about MQTT
+what I learned about Sparkplug
+what I learned about Ignition
+known limitations
+
+Create docs/demo.md with a 3–5 minute demo script.
+
+Ideal demo:
+
+1. Show all nodes healthy.
+2. Stop Edge Site B.
+3. Show Sparkplug/session state detect the loss.
+4. Watch topology link turn red.
+5. Show last-seen timestamp.
+6. Open Grafana and inspect the drop.
+7. Restart the node.
+8. Show birth/reconnection behavior.
+9. Introduce a PostgreSQL slow query.
+10. Show database-health dashboard identify it.
+
+The project is complete only when this demo works from a clean clone.
+
+## Engineering Quality Rules
+
+Do not fake screenshots.
+
+Do not hardcode metrics.
+
+Do not claim AWS integration if only local simulation exists.
+
+Do not claim RDS if PostgreSQL only runs locally.
+
+Do not claim replication monitoring unless a replica exists.
+
+Do not describe plain MQTT JSON as Sparkplug.
+
+Use official specifications where practical.
+
+Keep commits scoped and descriptive.
+
+Every major feature must include tests.
+
+Maintain a CHANGELOG.
+
+Create GitHub issues/milestones corresponding to each implementation phase.
+
+At the end, provide:
+
+final repository tree
+architecture diagram
+exact test results
+known limitations
+5-minute demo instructions
+resume-safe claims supported by working evidence
+skills that were actually demonstrated versus skills only studied
+
+Do not generate résumé claims until the corresponding functionality has been implemented and verified.

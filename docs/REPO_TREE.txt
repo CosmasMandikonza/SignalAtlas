@@ -1,0 +1,48 @@
+SignalAtlas/
+- .env.example
+    - ci.yml
+- .gitignore
+- .pre-commit-config.yaml
+- CHANGELOG.md
+- Dockerfile
+- Makefile
+- README.md
+- docker-compose.yml
+  - ORIGINAL_BRIEF.txt
+  - REPO_TREE.txt
+  - architecture.md
+  - backlog.md
+  - demo.md
+    - local-verification.txt
+  - security.md
+  - sparkplug.md
+  - troubleshooting.md
+  - README.md
+    - .gitkeep
+    - mosquitto.acl
+    - mosquitto.conf
+      - events.json
+        - dashboards.yml
+        - prometheus.yml
+    - prometheus.yml
+    - 00-roles.sh
+    - monitor.sql
+- pyproject.toml
+  - .gitkeep
+    - __init__.py
+    - api.py
+    - collector.py
+    - config.py
+    - database.py
+    - diagnostics.py
+    - edge.py
+    - model.py
+    - monitoring.py
+    - sparkplug.py
+  - test_api.py
+  - test_boundaries.py
+  - test_edge.py
+  - test_model.py
+  - test_sparkplug.py
+  - bootstrap.py
+  - fault_demo.py

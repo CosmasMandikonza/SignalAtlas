@@ -1,0 +1,23 @@
+# The observer can only subscribe. No NCMD/DCMD publication privileges.
+user monitor
+topic read spBv1.0/SignalAtlas/NBIRTH/+
+topic read spBv1.0/SignalAtlas/NDATA/+
+topic read spBv1.0/SignalAtlas/NDEATH/+
+
+user edge-a
+topic write spBv1.0/SignalAtlas/NBIRTH/edge-a
+topic write spBv1.0/SignalAtlas/NDATA/edge-a
+topic write spBv1.0/SignalAtlas/NDEATH/edge-a
+topic read spBv1.0/SignalAtlas/NCMD/edge-a
+
+user edge-b
+topic write spBv1.0/SignalAtlas/NBIRTH/edge-b
+topic write spBv1.0/SignalAtlas/NDATA/edge-b
+topic write spBv1.0/SignalAtlas/NDEATH/edge-b
+topic read spBv1.0/SignalAtlas/NCMD/edge-b
+
+user edge-c
+topic write spBv1.0/SignalAtlas/NBIRTH/edge-c
+topic write spBv1.0/SignalAtlas/NDATA/edge-c
+topic write spBv1.0/SignalAtlas/NDEATH/edge-c
+topic read spBv1.0/SignalAtlas/NCMD/edge-c
